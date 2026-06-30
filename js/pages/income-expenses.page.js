@@ -1,162 +1,217 @@
 /**
- * Hisaab Pro — Income & Expenses (Phase 4)
- * Full CRUD: add, edit, delete, search, filter by category/date/type.
- * Receipt upload to Cloudinary. Transactions grouped by month.
+ * Hisaab Pro — Income & Expenses (Phase 4 · Rewrite)
+ *
+ * Fixes:
+ *  • Add-btn listener wired ONCE in render(), never inside reload()
+ *  • Edit / delete use event-delegation on #txn-body — no per-element re-wiring
+ *  • Tab & filter listeners delegated on stable container elements
+ *  • data-anim on page-head so GSAP animates named items, not the whole outlet
+ *
+ * Layout: single-row toolbar (tabs + search + filters inline), clean month groups.
  */
-import { icon }               from "../components/icons.js";
-import { getUser }            from "../services/firebase/auth.service.js";
-import { getTransactions, addTransaction, updateTransaction, deleteTransaction, searchTransactions }
-                              from "../services/firebase/transactions.service.js";
+import { icon }             from "../components/icons.js";
+import { getUser }          from "../services/firebase/auth.service.js";
+import { getTransactions, addTransaction, updateTransaction,
+         deleteTransaction, searchTransactions }
+                            from "../services/firebase/transactions.service.js";
 import { uploadToCloudinary, isCloudinaryConfigured }
-                              from "../services/cloudinary/cloudinary.service.js";
+                            from "../services/cloudinary/cloudinary.service.js";
 import { formatMoney, formatDate } from "../utils/formatters.js";
-import { readAsDataURL }      from "../utils/helpers.js";
-import { toastSuccess, toastError, toastInfo } from "../components/toast.js";
+import { toastSuccess, toastError } from "../components/toast.js";
 import { openDrawer, confirm }  from "../components/modal.js";
-import { INCOME_CATEGORIES, EXPENSE_CATEGORIES, APP } from "../../config/app.config.js";
-import { LocalStore }         from "../services/storage/local.service.js";
+import { INCOME_CATEGORIES, EXPENSE_CATEGORIES, APP }
+                            from "../../config/app.config.js";
+import { LocalStore }       from "../services/storage/local.service.js";
 
 const ALL_CATS = [...INCOME_CATEGORIES, ...EXPENSE_CATEGORIES];
-const currency = () => LocalStore.get("preferences", {})?.currency || APP.defaultCurrency;
-const fmt = v => formatMoney(v, currency());
+const fmt = () => v => formatMoney(v, LocalStore.get("preferences",{})?.currency || APP.defaultCurrency);
 
-let state = { tab: "all", search: "", category: "", month: "" };
+/* ── module state ─────────────────────────────────────────────── */
+let _state = { tab: "all", search: "", category: "", month: "" };
+let _searchTimer = null;
 
 export default async function render(outlet) {
   const u = getUser();
-  state = { tab: "all", search: "", category: "", month: "" };
-  outlet.innerHTML = pageShell();
-  attachTabListeners(outlet);
-  await reload(outlet, u);
-}
+  _state = { tab: "all", search: "", category: "", month: "" };
 
-function pageShell() {
-  return `
-  <div class="page-head">
-    <div><span class="eyebrow">Finance</span><h1>Income & Expenses</h1></div>
-    <button class="btn btn--primary" id="add-txn-btn">${icon("plus")} Add Transaction</button>
+  /* ── Paint the static shell immediately ── */
+  outlet.innerHTML = `
+  <div class="page-head" data-anim>
+    <div>
+      <span class="eyebrow">Finance</span>
+      <h1>Income &amp; Expenses</h1>
+    </div>
+    <button class="btn btn--primary" id="ine-add-btn">
+      ${icon("plus")} Add Transaction
+    </button>
   </div>
 
-  <!-- Tabs + Search + Filters -->
-  <div class="module-toolbar">
-    <div class="seg-tabs" id="txn-tabs">
+  <!-- ── Toolbar: tabs + search + filters in one row ── -->
+  <div class="ine-toolbar" data-anim>
+    <div class="seg-tabs" id="ine-tabs">
       <button class="seg-btn is-active" data-tab="all">All</button>
       <button class="seg-btn" data-tab="income">${icon("arrow-up")} Income</button>
       <button class="seg-btn" data-tab="expense">${icon("arrow-down")} Expenses</button>
     </div>
-    <div class="toolbar-right">
-      <div class="searchbar-inline">
-        ${icon("search","input-icon")}
-        <input class="input input--icon" id="txn-search" placeholder="Search transactions…" type="search" />
+    <div class="ine-filters">
+      <div class="ine-search">
+        ${icon("search","ine-search-icon")}
+        <input class="input" id="ine-search" type="search"
+               placeholder="Search transactions…" autocomplete="off" />
       </div>
-      <div class="filter-row">
-        <div class="select-wrap select-wrap--sm">${icon("chevron-down","select-caret")}
-          <select class="input" id="filter-cat"><option value="">All categories</option>
-            ${ALL_CATS.map(c=>`<option value="${c.id}">${c.label}</option>`).join("")}
-          </select></div>
-        <div class="select-wrap select-wrap--sm">${icon("chevron-down","select-caret")}
-          <select class="input" id="filter-month"><option value="">All months</option>
-            ${last12Months().map(m=>`<option value="${m.value}">${m.label}</option>`).join("")}
-          </select></div>
+      <div class="select-wrap select-wrap--sm">
+        ${icon("chevron-down","select-caret")}
+        <select class="input" id="ine-cat">
+          <option value="">All categories</option>
+          ${ALL_CATS.map(c=>`<option value="${c.id}">${c.label}</option>`).join("")}
+        </select>
+      </div>
+      <div class="select-wrap select-wrap--sm">
+        ${icon("chevron-down","select-caret")}
+        <select class="input" id="ine-month">
+          <option value="">All months</option>
+          ${last12Months().map(m=>`<option value="${m.v}">${m.l}</option>`).join("")}
+        </select>
       </div>
     </div>
   </div>
 
-  <!-- Transaction list -->
-  <div id="txn-body" class="txn-module-body">
-    <div class="skeleton skeleton--block" style="height:200px"></div>
-  </div>`;
+  <!-- ── Transaction body ── -->
+  <div id="ine-body" class="ine-body"></div>`;
+
+  /* ── Wire add button ONCE ── */
+  outlet.querySelector("#ine-add-btn").addEventListener("click", () => openForm(outlet, u, null));
+
+  /* ── Tab delegation ── */
+  outlet.querySelector("#ine-tabs").addEventListener("click", e => {
+    const btn = e.target.closest("[data-tab]");
+    if (!btn) return;
+    outlet.querySelectorAll("#ine-tabs .seg-btn").forEach(b => b.classList.toggle("is-active", b === btn));
+    _state.tab = btn.dataset.tab;
+    reloadList(outlet, u);
+  });
+
+  /* ── Filter / search delegation ── */
+  outlet.querySelector("#ine-search").addEventListener("input", e => {
+    _state.search = e.target.value;
+    clearTimeout(_searchTimer);
+    _searchTimer = setTimeout(() => reloadList(outlet, u), 300);
+  });
+  outlet.querySelector("#ine-cat").addEventListener("change", e => {
+    _state.category = e.target.value; reloadList(outlet, u);
+  });
+  outlet.querySelector("#ine-month").addEventListener("change", e => {
+    _state.month = e.target.value; reloadList(outlet, u);
+  });
+
+  /* ── Delegated edit / delete on the list container ── */
+  outlet.querySelector("#ine-body").addEventListener("click", e => {
+    const editBtn = e.target.closest("[data-edit]");
+    const delBtn  = e.target.closest("[data-del]");
+    if (editBtn) openForm(outlet, u, editBtn.dataset.edit);
+    if (delBtn)  doDelete(outlet, u, delBtn.dataset.del);
+  });
+
+  await reloadList(outlet, u);
 }
 
-async function reload(outlet, u) {
-  const body = outlet.querySelector("#txn-body");
-  body.innerHTML = `<div class="skeleton skeleton--block" style="height:200px"></div>`;
+/* ════════════════════════════════════════════════════════════════
+   DATA RELOAD
+═══════════════════════════════════════════════════════════════ */
+async function reloadList(outlet, u) {
+  const body = outlet.querySelector("#ine-body");
+  body.innerHTML = `<div class="ine-loading">${skeleton()}</div>`;
 
   try {
-    let txns;
-    if (state.search.length >= 2) {
-      txns = await searchTransactions(u.uid, state.search);
-    } else {
-      txns = await getTransactions(u.uid, state.tab !== "all" ? { type: state.tab } : {});
+    let txns = _state.search.length >= 2
+      ? await searchTransactions(u.uid, _state.search)
+      : await getTransactions(u.uid, _state.tab !== "all" ? { type: _state.tab } : {});
+
+    if (_state.category) txns = txns.filter(t => t.category === _state.category);
+    if (_state.month)    txns = txns.filter(t => (t.date || "").startsWith(_state.month));
+
+    if (!txns.length) {
+      body.innerHTML = emptyState();
+      return;
     }
-    if (state.category) txns = txns.filter(t => t.category === state.category);
-    if (state.month)    txns = txns.filter(t => (t.date||"").startsWith(state.month));
 
-    body.innerHTML = txns.length ? renderGrouped(txns) : `
-      <div class="empty" style="padding:48px 0">
-        ${icon("receipt")}<div>
-          <div class="sec-title">No transactions</div>
-          <div class="sec-sub">Tap "+ Add Transaction" to get started.</div>
-        </div></div>`;
+    /* summary bar */
+    const inc = txns.filter(t=>t.type==="income").reduce((s,t)=>s+Number(t.amount),0);
+    const exp = txns.filter(t=>t.type==="expense").reduce((s,t)=>s+Number(t.amount),0);
+    const f   = fmt();
 
-    // wire edit/delete buttons
-    body.querySelectorAll("[data-edit]").forEach(btn => btn.addEventListener("click", () => openForm(outlet, u, btn.dataset.edit)));
-    body.querySelectorAll("[data-del]").forEach(btn => btn.addEventListener("click", () => doDelete(outlet, u, btn.dataset.del)));
-    // summary bar
-    const inc  = txns.filter(t=>t.type==="income").reduce((s,t)=>s+Number(t.amount),0);
-    const exp  = txns.filter(t=>t.type==="expense").reduce((s,t)=>s+Number(t.amount),0);
-    const sumBar = outlet.querySelector("#txn-summary");
-    if (sumBar) sumBar.innerHTML = `
-      <span class="sum-item success">${icon("arrow-up")} ${fmt(inc)}</span>
-      <span class="sum-sep">·</span>
-      <span class="sum-item danger">${icon("arrow-down")} ${fmt(exp)}</span>
-      <span class="sum-sep">·</span>
-      <span class="sum-item ${inc-exp>=0?"success":"danger"}">Net ${fmt(inc-exp)}</span>`;
+    body.innerHTML = `
+      <div class="ine-summary-bar">
+        <span class="ine-sum ine-sum--income">${icon("arrow-up")} ${f(inc)}</span>
+        <span class="ine-sum-dot"></span>
+        <span class="ine-sum ine-sum--expense">${icon("arrow-down")} ${f(exp)}</span>
+        <span class="ine-sum-dot"></span>
+        <span class="ine-sum ${inc-exp>=0?"ine-sum--income":"ine-sum--expense"}">Net ${f(inc-exp)}</span>
+        <span class="ine-sum-count">${txns.length} transaction${txns.length!==1?"s":""}</span>
+      </div>
+      ${renderGrouped(txns)}`;
+
   } catch (err) {
-    body.innerHTML = `<div class="empty"><div class="sec-title">Couldn't load transactions</div><div class="sec-sub">${err.message||""}</div></div>`;
+    body.innerHTML = `<div class="empty">
+      ${icon("alert")}<div>
+        <div class="sec-title">Couldn't load transactions</div>
+        <div class="sec-sub">${esc(err.message || "")}</div>
+      </div></div>`;
   }
-
-  // wire add btn
-  outlet.querySelector("#add-txn-btn")?.addEventListener("click", () => openForm(outlet, u, null));
 }
 
+/* ════════════════════════════════════════════════════════════════
+   RENDERING
+═══════════════════════════════════════════════════════════════ */
 function renderGrouped(txns) {
   const months = {};
   txns.forEach(t => {
-    const ym = (t.date||new Date().toISOString()).slice(0,7);
-    if (!months[ym]) months[ym] = [];
-    months[ym].push(t);
+    const ym = (t.date || new Date().toISOString()).slice(0, 7);
+    (months[ym] = months[ym] || []).push(t);
   });
-
-  let html = `<div class="txn-summary-bar" id="txn-summary"></div>`;
-  Object.keys(months).sort((a,b)=>b.localeCompare(a)).forEach(ym => {
+  const f = fmt();
+  return Object.keys(months).sort((a, b) => b.localeCompare(a)).map(ym => {
     const group = months[ym];
-    const monthInc = group.filter(t=>t.type==="income").reduce((s,t)=>s+Number(t.amount),0);
-    const monthExp = group.filter(t=>t.type==="expense").reduce((s,t)=>s+Number(t.amount),0);
-    const [yr,mo] = ym.split("-");
-    const label = new Date(yr, mo-1).toLocaleDateString("en-PK",{month:"long",year:"numeric"});
-    html += `<div class="txn-month-group">
-      <div class="txn-month-head">
-        <span class="txn-month-label">${label}</span>
-        <span class="txn-month-stats">
-          <span class="success">+${fmt(monthInc)}</span>
-          <span class="danger">-${fmt(monthExp)}</span>
+    const [yr, mo] = ym.split("-");
+    const label = new Date(yr, mo - 1).toLocaleDateString("en-PK", { month: "long", year: "numeric" });
+    const mInc = group.filter(t=>t.type==="income").reduce((s,t)=>s+Number(t.amount),0);
+    const mExp = group.filter(t=>t.type==="expense").reduce((s,t)=>s+Number(t.amount),0);
+    return `
+    <div class="ine-month-group">
+      <div class="ine-month-head">
+        <span class="ine-month-label">${label}</span>
+        <span class="ine-month-totals">
+          <span class="success">+${f(mInc)}</span>
+          <span class="danger">-${f(mExp)}</span>
         </span>
       </div>
-      ${group.map(txnCard).join("")}
+      <div class="ine-list">
+        ${group.map(txnRow).join("")}
+      </div>
     </div>`;
-  });
-  return html;
+  }).join("");
 }
 
-function txnCard(t) {
+function txnRow(t) {
   const inc = t.type === "income";
-  const cat = ALL_CATS.find(c=>c.id===t.category);
-  return `<div class="txn-card">
-    <span class="txn-ic txn-ic--${inc?"income":"expense"} txn-ic--lg">${icon(inc?"arrow-up":"arrow-down")}</span>
-    <div class="txn-info">
-      <div class="txn-desc">${esc(t.description||cat?.label||t.category||"—")}</div>
-      <div class="txn-meta">
-        <span class="badge" style="background:${cat?.color||"var(--c-border)"}22;color:${cat?.color||"var(--c-text-mute)"};border:1px solid ${cat?.color||"var(--c-border)"}44">
-          ${cat?.label||t.category}
+  const cat = ALL_CATS.find(c => c.id === t.category);
+  const f   = fmt();
+  return `
+  <div class="ine-row">
+    <span class="ine-ic ine-ic--${inc?"income":"expense"}">${icon(inc?"arrow-up":"arrow-down")}</span>
+    <div class="ine-info">
+      <div class="ine-desc">${esc(t.description || cat?.label || t.category || "—")}</div>
+      <div class="ine-meta">
+        <span class="ine-badge" style="--bc:${cat?.color||"var(--c-border)"}">
+          ${esc(cat?.label || t.category)}
         </span>
-        · ${formatDate(t.date,"medium")}
-        ${t.receiptUrl ? `· <a href="${t.receiptUrl}" target="_blank" rel="noopener" class="txn-receipt">${icon("file-text")} Receipt</a>` : ""}
+        <span class="ine-date">${formatDate(t.date, "medium")}</span>
+        ${t.receiptUrl ? `<a href="${t.receiptUrl}" target="_blank" rel="noopener" class="ine-receipt">${icon("file-text")} Receipt</a>` : ""}
       </div>
     </div>
-    <div class="txn-right">
-      <div class="figure txn-amount ${inc?"success":"danger"}">${inc?"+":"-"}${fmt(t.amount)}</div>
-      <div class="txn-actions">
+    <div class="ine-right">
+      <div class="ine-amount ${inc?"success":"danger"}">${inc?"+":"-"}${f(t.amount)}</div>
+      <div class="ine-actions">
         <button class="icon-btn icon-btn--sm" data-edit="${t.id}" title="Edit">${icon("edit")}</button>
         <button class="icon-btn icon-btn--sm icon-btn--danger" data-del="${t.id}" title="Delete">${icon("trash")}</button>
       </div>
@@ -164,27 +219,9 @@ function txnCard(t) {
   </div>`;
 }
 
-function attachTabListeners(outlet) {
-  outlet.addEventListener("click", e => {
-    const btn = e.target.closest("[data-tab]");
-    if (!btn) return;
-    outlet.querySelectorAll(".seg-btn").forEach(b => b.classList.remove("is-active"));
-    btn.classList.add("is-active");
-    state.tab = btn.dataset.tab;
-    const u = getUser();
-    reload(outlet, u);
-  });
-
-  let searchTimer;
-  outlet.addEventListener("input", e => {
-    const el = e.target;
-    if (el.id === "txn-search")    { clearTimeout(searchTimer); state.search = el.value; searchTimer = setTimeout(() => reload(outlet, getUser()), 320); }
-    if (el.id === "filter-cat")    { state.category = el.value; reload(outlet, getUser()); }
-    if (el.id === "filter-month")  { state.month    = el.value; reload(outlet, getUser()); }
-  });
-}
-
-/* ---- Add/Edit form ---- */
+/* ════════════════════════════════════════════════════════════════
+   ADD / EDIT FORM
+═══════════════════════════════════════════════════════════════ */
 async function openForm(outlet, u, editId) {
   let existing = null;
   if (editId) {
@@ -192,98 +229,108 @@ async function openForm(outlet, u, editId) {
     existing = all.find(t => t.id === editId);
   }
   const isEdit = Boolean(existing);
-  const t = existing || { type: state.tab === "expense" ? "expense" : "income", date: new Date().toISOString().slice(0,10) };
+  let selType = existing?.type || (_state.tab === "expense" ? "expense" : "income");
+  let receiptData = { url: existing?.receiptUrl || null, name: existing?.receiptName || null };
 
-  const body = document.createElement("div");
-  body.className = "col gap-4";
-  body.innerHTML = `
-    <div class="seg-tabs" id="form-type-tabs">
-      <button class="seg-btn ${t.type==="income"?"is-active":""}" data-type="income">${icon("arrow-up")} Income</button>
-      <button class="seg-btn ${t.type==="expense"?"is-active":""}" data-type="expense">${icon("arrow-down")} Expense</button>
+  const wrap = document.createElement("div");
+  wrap.className = "col gap-4";
+  wrap.innerHTML = `
+    <div class="seg-tabs" id="ft-tabs">
+      <button class="seg-btn ${selType==="income"?"is-active":""}" data-type="income">${icon("arrow-up")} Income</button>
+      <button class="seg-btn ${selType==="expense"?"is-active":""}" data-type="expense">${icon("arrow-down")} Expense</button>
     </div>
-
-    <div class="field"><label class="field-label">Amount</label>
+    <div class="field">
+      <label class="field-label">Amount</label>
       <div class="input-wrap">${icon("coins","input-icon")}
-        <input class="input input--icon" id="f-amount" type="number" min="0" step="1" value="${existing?.amount||""}" placeholder="0" required />
-      </div></div>
-
-    <div class="field"><label class="field-label">Category</label>
+        <input class="input input--icon" id="ft-amount" type="number" min="0" step="1"
+               value="${existing?.amount||""}" placeholder="0" required autofocus />
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Category</label>
       <div class="select-wrap">${icon("chevron-down","select-caret")}
-        <select class="input" id="f-cat">${buildCatOptions(t.type, existing?.category)}</select>
-      </div></div>
-
-    <div class="field"><label class="field-label">Description</label>
-      <input class="input" id="f-desc" type="text" value="${esc(existing?.description||"")}" placeholder="What was this for?" /></div>
-
-    <div class="field"><label class="field-label">Date</label>
-      <input class="input" id="f-date" type="date" value="${t.date}" /></div>
-
+        <select class="input" id="ft-cat">${catOptions(selType, existing?.category)}</select>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Description</label>
+      <input class="input" id="ft-desc" type="text"
+             value="${esc(existing?.description||"")}" placeholder="What was this for?" />
+    </div>
+    <div class="field">
+      <label class="field-label">Date</label>
+      <input class="input" id="ft-date" type="date"
+             value="${existing?.date || new Date().toISOString().slice(0,10)}" />
+    </div>
     ${isCloudinaryConfigured ? `
-    <div class="field"><label class="field-label">Receipt</label>
-      <div class="receipt-upload-area" id="receipt-area">
-        ${existing?.receiptUrl
-          ? `<a href="${existing.receiptUrl}" target="_blank" class="receipt-preview">${icon("file-text")} ${esc(existing.receiptName||"View receipt")}</a>
-             <button type="button" class="btn btn--subtle" id="change-receipt">Change</button>`
-          : `<label class="btn btn--ghost" for="f-receipt">${icon("upload")} Upload Receipt</label>`}
-        <input type="file" id="f-receipt" accept="image/*,.pdf" hidden />
-        <div class="receipt-progress hidden" id="receipt-progress"><div class="bar"></div><span id="receipt-pct">0%</span></div>
-        <div id="receipt-status" class="field-hint"></div>
-      </div></div>` : ""}
+    <div class="field">
+      <label class="field-label">Receipt / Invoice</label>
+      <div id="ft-receipt-area">
+        ${receiptData.url
+          ? `<div class="ine-receipt-preview">
+               <a href="${receiptData.url}" target="_blank">${icon("file-text")} ${esc(receiptData.name||"View receipt")}</a>
+               <button type="button" class="btn btn--subtle" id="ft-change-receipt">Change</button>
+             </div>`
+          : `<label class="btn btn--ghost" for="ft-file">${icon("upload")} Upload Receipt</label>`}
+        <input type="file" id="ft-file" accept="image/*,.pdf" hidden />
+        <div class="ine-upload-progress hidden" id="ft-progress">
+          <div class="ine-progress-bar" id="ft-bar"></div>
+          <span id="ft-pct">0%</span>
+        </div>
+        <div id="ft-status" class="field-hint"></div>
+      </div>
+    </div>` : ""}
+    <button class="btn btn--primary btn--block btn--lg" id="ft-save">
+      ${icon(isEdit?"save":"plus")} ${isEdit?"Update Transaction":"Add Transaction"}
+    </button>`;
 
-    <div class="flex gap-3">
-      <button class="btn btn--primary btn--block" id="f-save">${isEdit ? icon("save")+" Update" : icon("plus")+" Add Transaction"}</button>
-    </div>`;
-
-  // Type tab switching inside form
-  let selectedType = t.type;
-  body.addEventListener("click", e => {
-    const typeBtn = e.target.closest("[data-type]");
-    if (!typeBtn) return;
-    selectedType = typeBtn.dataset.type;
-    body.querySelectorAll("[data-type]").forEach(b => b.classList.toggle("is-active", b === typeBtn));
-    const cats = selectedType === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
-    body.querySelector("#f-cat").innerHTML = buildCatOptions(selectedType, null);
+  /* type switching */
+  wrap.querySelector("#ft-tabs").addEventListener("click", e => {
+    const b = e.target.closest("[data-type]");
+    if (!b) return;
+    selType = b.dataset.type;
+    wrap.querySelectorAll("#ft-tabs .seg-btn").forEach(x => x.classList.toggle("is-active", x===b));
+    wrap.querySelector("#ft-cat").innerHTML = catOptions(selType, null);
   });
 
-  // Receipt upload
-  let receiptData = { url: existing?.receiptUrl||null, name: existing?.receiptName||null };
-  body.addEventListener("change", async e => {
-    if (e.target.id !== "f-receipt") return;
+  /* receipt upload */
+  wrap.querySelector("#ft-file")?.addEventListener("change", async e => {
     const file = e.target.files?.[0]; if (!file) return;
-    const progress = body.querySelector("#receipt-progress");
-    const pctEl   = body.querySelector("#receipt-pct");
-    const status  = body.querySelector("#receipt-status");
-    progress.classList.remove("hidden");
+    const prog = wrap.querySelector("#ft-progress");
+    const bar  = wrap.querySelector("#ft-bar");
+    const pct  = wrap.querySelector("#ft-pct");
+    const status = wrap.querySelector("#ft-status");
+    prog.classList.remove("hidden");
     status.textContent = "Uploading…";
     try {
       const res = await uploadToCloudinary(file, {
         folder: "hisaab-pro/receipts",
-        tags:   ["receipt"],
-        onProgress: pct => { progress.querySelector(".bar").style.width=pct+"%"; pctEl.textContent=pct+"%"; }
+        onProgress: p => { bar.style.width = p+"%"; pct.textContent = p+"%"; }
       });
       receiptData = { url: res.secureUrl, name: file.name };
-      status.innerHTML = `${icon("check")} Uploaded: <a href="${res.secureUrl}" target="_blank">${esc(file.name)}</a>`;
-      progress.classList.add("hidden");
+      status.innerHTML = `${icon("check")} <a href="${res.secureUrl}" target="_blank">${esc(file.name)}</a>`;
+      prog.classList.add("hidden");
     } catch (err) {
       status.textContent = "Upload failed: " + (err.message||"");
-      progress.classList.add("hidden");
+      prog.classList.add("hidden");
     }
   });
 
-  const { close } = openDrawer({ title: isEdit ? "Edit Transaction" : "New Transaction", body });
+  const { close } = openDrawer({ title: isEdit ? "Edit Transaction" : "New Transaction", body: wrap });
 
-  body.querySelector("#f-save").addEventListener("click", async () => {
-    const amount = Number(body.querySelector("#f-amount").value);
-    if (!amount) { toastError("Enter an amount."); return; }
-    const btn = body.querySelector("#f-save");
+  /* save */
+  wrap.querySelector("#ft-save").addEventListener("click", async () => {
+    const amount = Number(wrap.querySelector("#ft-amount").value);
+    if (!amount || amount <= 0) { toastError("Enter a valid amount."); return; }
+    const btn = wrap.querySelector("#ft-save");
     btn.disabled = true; btn.innerHTML = `<span class="btn-spinner"></span> Saving…`;
     try {
       const payload = {
-        type:        selectedType,
+        type:        selType,
         amount,
-        category:    body.querySelector("#f-cat").value,
-        description: body.querySelector("#f-desc").value,
-        date:        body.querySelector("#f-date").value,
+        category:    wrap.querySelector("#ft-cat").value,
+        description: wrap.querySelector("#ft-desc").value,
+        date:        wrap.querySelector("#ft-date").value,
         receiptUrl:  receiptData.url,
         receiptName: receiptData.name
       };
@@ -291,38 +338,62 @@ async function openForm(outlet, u, editId) {
       else        await addTransaction(u.uid, payload);
       toastSuccess(isEdit ? "Transaction updated." : "Transaction added.");
       close();
-      await reload(outlet, u);
-    } catch(err) { toastError(err.message||"Couldn't save."); btn.disabled=false; btn.textContent="Save"; }
-  });
-}
-
-async function doDelete(outlet, u, id) {
-  confirm({
-    title: "Delete transaction?",
-    message: "This action can't be undone.",
-    confirmLabel: "Delete",
-    onConfirm: async () => {
-      await deleteTransaction(u.uid, id);
-      toastSuccess("Transaction deleted.");
-      await reload(outlet, u);
+      await reloadList(outlet, u);
+    } catch(err) {
+      toastError(err.message || "Couldn't save.");
+      btn.disabled = false;
+      btn.innerHTML = `${icon(isEdit?"save":"plus")} ${isEdit?"Update":"Add"}`;
     }
   });
 }
 
-function buildCatOptions(type, selected) {
-  const cats = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
-  return cats.map(c => `<option value="${c.id}" ${c.id===selected?"selected":""}>${c.label}</option>`).join("");
+/* ════════════════════════════════════════════════════════════════
+   DELETE
+═══════════════════════════════════════════════════════════════ */
+function doDelete(outlet, u, id) {
+  confirm({
+    title: "Delete transaction?",
+    message: "This can't be undone.",
+    confirmLabel: "Delete",
+    onConfirm: async () => {
+      await deleteTransaction(u.uid, id);
+      toastSuccess("Transaction deleted.");
+      await reloadList(outlet, u);
+    }
+  });
+}
+
+/* ════════════════════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════════════════ */
+function catOptions(type, selected) {
+  return (type==="income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES)
+    .map(c => `<option value="${c.id}" ${c.id===selected?"selected":""}>${c.label}</option>`)
+    .join("");
 }
 
 function last12Months() {
-  const months = [];
-  for (let i = 0; i < 12; i++) {
-    const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - i);
-    const value = d.toISOString().slice(0,7);
-    const label = d.toLocaleDateString("en-PK",{month:"long",year:"numeric"});
-    months.push({ value, label });
-  }
-  return months;
+  return Array.from({length:12},(_,i)=>{
+    const d = new Date(); d.setDate(1); d.setMonth(d.getMonth()-i);
+    return { v: d.toISOString().slice(0,7), l: d.toLocaleDateString("en-PK",{month:"long",year:"numeric"}) };
+  });
+}
+
+function emptyState() {
+  const msg = _state.search || _state.category || _state.month
+    ? "No transactions match your filters."
+    : "No transactions yet.";
+  const sub = _state.search || _state.category || _state.month
+    ? "Try adjusting your search or filters."
+    : 'Tap "+ Add Transaction" to record your first one.';
+  return `<div class="empty" style="padding:56px 0">
+    ${icon("receipt")}
+    <div><div class="sec-title">${msg}</div><div class="sec-sub">${sub}</div></div>
+  </div>`;
+}
+
+function skeleton() {
+  return Array(3).fill(`<div class="skeleton skeleton--block" style="height:60px;margin-bottom:8px"></div>`).join("");
 }
 
 const esc = s => String(s||"").replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));

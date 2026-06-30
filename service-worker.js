@@ -3,7 +3,7 @@
  * App-shell precache + smart runtime caching so the app loads instantly
  * and works offline. Bump CACHE_VERSION to invalidate old caches.
  */
-const CACHE_VERSION = "hisaab-pro-v1.0.0";
+const CACHE_VERSION = "hisaab-pro-v2.0.0";
 const APP_SHELL = `${CACHE_VERSION}-shell`;
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 

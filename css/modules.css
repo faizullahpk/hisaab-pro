@@ -642,3 +642,242 @@
 }
 .skeleton--block { width: 100%; min-height: 40px; }
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* ================================================================
+   INCOME & EXPENSES PAGE  (ine-*)
+   ================================================================ */
+
+/* Toolbar: tabs + search + filters in one compact row */
+.ine-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.ine-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+.ine-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.ine-search-icon {
+  position: absolute;
+  left: 10px;
+  width: 15px;
+  height: 15px;
+  color: var(--c-text-mute);
+  pointer-events: none;
+}
+.ine-search .input {
+  padding-left: 32px;
+  width: 210px;
+  height: 36px;
+  font-size: var(--fs-sm);
+}
+.ine-filters .select-wrap--sm .input {
+  height: 36px;
+  font-size: var(--fs-sm);
+}
+
+/* Body */
+.ine-body { display: flex; flex-direction: column; gap: 0; }
+.ine-loading { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+
+/* Summary bar */
+.ine-summary-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 11px 16px;
+  background: var(--glass-bg);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.ine-sum {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.ine-sum .icon { width: 13px; height: 13px; }
+.ine-sum--income  { color: var(--c-success); }
+.ine-sum--expense { color: var(--c-danger); }
+.ine-sum-dot {
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--c-border);
+}
+.ine-sum-count {
+  margin-left: auto;
+  font-size: var(--fs-xs);
+  color: var(--c-text-mute);
+  font-weight: 400;
+}
+
+/* Month group */
+.ine-month-group { margin-bottom: 20px; }
+.ine-month-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 2px 8px;
+}
+.ine-month-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--c-text-mute);
+}
+.ine-month-totals {
+  display: flex;
+  gap: 10px;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+.ine-list {
+  background: var(--c-elevated, rgba(255,255,255,.03));
+  border: 1px solid var(--c-border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+/* Transaction row */
+.ine-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--c-border);
+  transition: background .13s;
+}
+.ine-row:last-child { border-bottom: none; }
+.ine-row:hover { background: var(--glass-bg); }
+.ine-row:hover .ine-actions { opacity: 1; }
+
+.ine-ic {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ine-ic .icon { width: 15px; height: 15px; }
+.ine-ic--income  { background: var(--c-success)18; color: var(--c-success); }
+.ine-ic--expense { background: var(--c-danger)18;  color: var(--c-danger); }
+
+.ine-info { flex: 1; min-width: 0; }
+.ine-desc {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ine-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 3px;
+  flex-wrap: wrap;
+}
+.ine-badge {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--bc) 12%, transparent);
+  color: var(--bc);
+  border: 1px solid color-mix(in srgb, var(--bc) 25%, transparent);
+}
+.ine-date {
+  font-size: var(--fs-xs);
+  color: var(--c-text-mute);
+}
+.ine-receipt {
+  font-size: var(--fs-xs);
+  color: var(--c-primary);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.ine-receipt .icon { width: 11px; height: 11px; }
+.ine-receipt:hover { text-decoration: underline; }
+
+.ine-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.ine-amount {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  font-family: var(--ff-mono, monospace);
+  font-variant-numeric: tabular-nums;
+  min-width: 90px;
+  text-align: right;
+}
+.ine-actions {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity .15s;
+}
+
+/* Receipt upload in form */
+.ine-receipt-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--fs-sm);
+}
+.ine-receipt-preview a { color: var(--c-primary); text-decoration: none; display: flex; align-items: center; gap: 4px; }
+.ine-receipt-preview a:hover { text-decoration: underline; }
+.ine-upload-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+.ine-upload-progress.hidden { display: none; }
+.ine-progress-bar {
+  flex: 1;
+  height: 3px;
+  background: var(--c-primary);
+  border-radius: 2px;
+  transition: width .3s;
+  width: 0%;
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  .ine-toolbar { flex-direction: column; align-items: stretch; }
+  .ine-filters { margin-left: 0; }
+  .ine-search .input { width: 100%; }
+  .ine-filters { flex-direction: column; gap: 6px; }
+  .ine-filters .select-wrap--sm,
+  .ine-filters .ine-search { width: 100%; }
+  .ine-actions { opacity: 1; }
+}
+
+/* color-mix() fallback for browsers without it */
+@supports not (background: color-mix(in srgb, red 10%, transparent)) {
+  .ine-badge {
+    background: rgba(0,0,0,.1);
+    color: inherit;
+    border: 1px solid rgba(0,0,0,.15);
+  }
+}
