@@ -1,0 +1,316 @@
+/* ============================================================
+   Hisaab Pro — Theme Engine
+   10 themes. Each defines a semantic palette + a signature
+   animated background. Switch instantly via [data-theme] on
+   <html>. Backgrounds are pure CSS: GPU-friendly, offline-safe.
+   ============================================================ */
+
+/* ---------- 1. MIDNIGHT (default) — violet aurora night ---------- */
+[data-theme="midnight"] {
+  --c-bg: #0a0a14;       --c-bg-2: #0e0b1d;
+  --c-surface: rgba(22,20,42,0.72);   --c-surface-2: rgba(30,27,54,0.62);
+  --c-elevated: #15132a;
+  --c-text: #f3f1ff;     --c-text-soft: #b9b4d6;   --c-text-mute: #7d7799;
+  --c-border: rgba(146,131,255,0.14);
+  --c-primary: #8b7cff;  --c-primary-soft: #6c5ce7; --c-primary-glow: rgba(123,108,255,0.45);
+  --c-accent: #ff7ac6;
+  --c-success: #5be7a9;  --c-warning: #ffcf5c;  --c-danger: #ff6b7d;
+  --glass-rgb: 180, 168, 255;
+  --glass-bg: rgba(180,168,255,0.06);
+  --glass-bg-strong: rgba(180,168,255,0.11);
+  --bg-1: #1a1340; --bg-2: #0a0a14; --bg-3: #2a1654;
+}
+[data-theme="midnight"] .app-bg::before {
+  background:
+    radial-gradient(60% 50% at 20% 18%, rgba(123,108,255,0.40), transparent 70%),
+    radial-gradient(50% 45% at 82% 30%, rgba(255,122,198,0.28), transparent 72%),
+    radial-gradient(55% 50% at 50% 100%, rgba(108,92,231,0.30), transparent 70%);
+  animation: aurora-drift 26s var(--ease-in-out) infinite;
+}
+
+/* ---------- 2. DARK — neutral professional slate ---------- */
+[data-theme="dark"] {
+  --c-bg: #0c0d10;       --c-bg-2: #111317;
+  --c-surface: rgba(24,26,31,0.78);   --c-surface-2: rgba(32,35,42,0.66);
+  --c-elevated: #16181d;
+  --c-text: #eef0f4;     --c-text-soft: #aeb3bd;   --c-text-mute: #71767f;
+  --c-border: rgba(255,255,255,0.09);
+  --c-primary: #4f8cff;  --c-primary-soft: #3b78f0; --c-primary-glow: rgba(79,140,255,0.40);
+  --c-accent: #57d9c7;
+  --c-success: #4fd38a;  --c-warning: #f5c451;  --c-danger: #f0667a;
+  --glass-rgb: 255, 255, 255;
+  --glass-bg: rgba(255,255,255,0.05);
+  --glass-bg-strong: rgba(255,255,255,0.09);
+  --bg-1: #14161b; --bg-2: #0c0d10; --bg-3: #1a1d24;
+}
+[data-theme="dark"] .app-bg::before {
+  background:
+    radial-gradient(50% 40% at 80% 12%, rgba(79,140,255,0.18), transparent 70%),
+    radial-gradient(45% 40% at 12% 88%, rgba(87,217,199,0.12), transparent 72%);
+  animation: aurora-drift 32s var(--ease-in-out) infinite;
+}
+
+/* ---------- 3. LIGHT — clean daylight ---------- */
+[data-theme="light"] {
+  --c-bg: #f6f7fb;       --c-bg-2: #eef1f8;
+  --c-surface: rgba(255,255,255,0.82);   --c-surface-2: rgba(255,255,255,0.66);
+  --c-elevated: #ffffff;
+  --c-text: #14161d;     --c-text-soft: #4d5360;   --c-text-mute: #8a90a0;
+  --c-border: rgba(20,24,40,0.10);
+  --c-primary: #5b6cff;  --c-primary-soft: #4453e6; --c-primary-glow: rgba(91,108,255,0.30);
+  --c-accent: #ff7eb6;
+  --c-success: #1fb574;  --c-warning: #e0a213;  --c-danger: #e84860;
+  --glass-rgb: 91, 108, 255;
+  --glass-bg: rgba(91,108,255,0.07);
+  --glass-bg-strong: rgba(91,108,255,0.13);
+  --bg-1: #eef1fb; --bg-2: #f6f7fb; --bg-3: #fbeef6;
+}
+[data-theme="light"] .app-bg::before {
+  background:
+    radial-gradient(55% 45% at 18% 16%, rgba(91,108,255,0.16), transparent 70%),
+    radial-gradient(50% 45% at 84% 28%, rgba(255,126,182,0.14), transparent 72%),
+    radial-gradient(50% 50% at 50% 100%, rgba(120,170,255,0.14), transparent 70%);
+  animation: aurora-drift 30s var(--ease-in-out) infinite;
+}
+
+/* ---------- 4. MINIMAL — quiet white, almost no chrome ---------- */
+[data-theme="minimal"] {
+  --c-bg: #ffffff;       --c-bg-2: #fafafa;
+  --c-surface: rgba(255,255,255,0.9);   --c-surface-2: rgba(248,248,248,0.85);
+  --c-elevated: #ffffff;
+  --c-text: #18181b;     --c-text-soft: #52525b;   --c-text-mute: #a1a1aa;
+  --c-border: rgba(0,0,0,0.08);
+  --c-primary: #18181b;  --c-primary-soft: #3f3f46; --c-primary-glow: rgba(0,0,0,0.10);
+  --c-accent: #ef6f53;
+  --c-success: #16a34a;  --c-warning: #ca8a04;  --c-danger: #dc2626;
+  --glass-rgb: 0, 0, 0;
+  --glass-bg: rgba(0,0,0,0.04);
+  --glass-bg-strong: rgba(0,0,0,0.08);
+  --bg-1: #ffffff; --bg-2: #fafafa; --bg-3: #f4f4f5;
+}
+[data-theme="minimal"] .app-bg::before {
+  background:
+    radial-gradient(60% 50% at 30% 0%, rgba(0,0,0,0.025), transparent 70%);
+  animation: none;
+}
+[data-theme="minimal"] .app-bg::after { opacity: 0.4; }
+
+/* ---------- 5. CYBERPUNK — magenta/cyan neon grid ---------- */
+[data-theme="cyberpunk"] {
+  --c-bg: #0a0014;       --c-bg-2: #14001f;
+  --c-surface: rgba(30,2,46,0.7);   --c-surface-2: rgba(45,4,66,0.6);
+  --c-elevated: #1b0230;
+  --c-text: #f7e9ff;     --c-text-soft: #d39bff;   --c-text-mute: #9a5fd0;
+  --c-border: rgba(255,46,180,0.24);
+  --c-primary: #ff2ec4;  --c-primary-soft: #ff5cd4; --c-primary-glow: rgba(255,46,196,0.55);
+  --c-accent: #2ef0ff;
+  --c-success: #2effb0;  --c-warning: #ffe93b;  --c-danger: #ff3b6b;
+  --glass-rgb: 255, 90, 220;
+  --glass-bg: rgba(255,90,220,0.07);
+  --glass-bg-strong: rgba(255,90,220,0.12);
+  --bg-1: #1a0030; --bg-2: #0a0014; --bg-3: #001a2e;
+}
+[data-theme="cyberpunk"] .app-bg::before {
+  background:
+    radial-gradient(50% 50% at 15% 12%, rgba(255,46,196,0.40), transparent 65%),
+    radial-gradient(50% 50% at 85% 85%, rgba(46,240,255,0.32), transparent 68%);
+  animation: aurora-drift 18s var(--ease-in-out) infinite;
+}
+[data-theme="cyberpunk"] .app-bg::after {
+  background-image:
+    linear-gradient(rgba(255,46,196,0.10) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(46,240,255,0.10) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 60%, #000 30%, transparent 80%);
+  opacity: 1;
+  animation: grid-pan 14s linear infinite;
+}
+
+/* ---------- 6. OCEAN — teal depths, flowing waves ---------- */
+[data-theme="ocean"] {
+  --c-bg: #04141c;       --c-bg-2: #051f2b;
+  --c-surface: rgba(8,40,54,0.7);   --c-surface-2: rgba(12,54,72,0.6);
+  --c-elevated: #06283a;
+  --c-text: #e6fbff;     --c-text-soft: #9fd8e6;   --c-text-mute: #5f97a8;
+  --c-border: rgba(64,210,224,0.18);
+  --c-primary: #29c6d8;  --c-primary-soft: #18b0c4; --c-primary-glow: rgba(41,198,216,0.45);
+  --c-accent: #4ce0a3;
+  --c-success: #3fdca0;  --c-warning: #ffd166;  --c-danger: #ff7a8a;
+  --glass-rgb: 120, 220, 235;
+  --glass-bg: rgba(120,220,235,0.07);
+  --glass-bg-strong: rgba(120,220,235,0.13);
+  --bg-1: #062b3a; --bg-2: #04141c; --bg-3: #073048;
+}
+[data-theme="ocean"] .app-bg::before {
+  background:
+    radial-gradient(60% 45% at 25% 20%, rgba(41,198,216,0.32), transparent 70%),
+    radial-gradient(55% 50% at 80% 90%, rgba(76,224,163,0.24), transparent 72%);
+  animation: ocean-sway 20s var(--ease-in-out) infinite;
+}
+[data-theme="ocean"] .app-bg::after {
+  background:
+    repeating-linear-gradient(120deg, transparent 0 40px, rgba(64,210,224,0.04) 40px 80px);
+  opacity: 1;
+  animation: grid-pan 26s linear infinite;
+}
+
+/* ---------- 7. FOREST — deep green, organic light ---------- */
+[data-theme="forest"] {
+  --c-bg: #08130d;       --c-bg-2: #0c1d13;
+  --c-surface: rgba(16,38,26,0.72);   --c-surface-2: rgba(22,52,36,0.62);
+  --c-elevated: #0e2417;
+  --c-text: #eafff1;     --c-text-soft: #a7d6b8;   --c-text-mute: #6a9a7c;
+  --c-border: rgba(86,222,140,0.16);
+  --c-primary: #4fcf86;  --c-primary-soft: #3bb874; --c-primary-glow: rgba(79,207,134,0.40);
+  --c-accent: #d9c46a;
+  --c-success: #5be08a;  --c-warning: #e7c15a;  --c-danger: #ef7d6e;
+  --glass-rgb: 150, 230, 180;
+  --glass-bg: rgba(150,230,180,0.07);
+  --glass-bg-strong: rgba(150,230,180,0.13);
+  --bg-1: #0e2718; --bg-2: #08130d; --bg-3: #16331f;
+}
+[data-theme="forest"] .app-bg::before {
+  background:
+    radial-gradient(55% 45% at 20% 18%, rgba(79,207,134,0.28), transparent 70%),
+    radial-gradient(50% 50% at 82% 86%, rgba(217,196,106,0.18), transparent 72%);
+  animation: aurora-drift 34s var(--ease-in-out) infinite;
+}
+
+/* ---------- 8. NEON — vivid electric glow ---------- */
+[data-theme="neon"] {
+  --c-bg: #060608;       --c-bg-2: #0b0b10;
+  --c-surface: rgba(18,18,26,0.74);   --c-surface-2: rgba(26,26,38,0.62);
+  --c-elevated: #121219;
+  --c-text: #f2fff8;     --c-text-soft: #a8ffd8;   --c-text-mute: #5fae8a;
+  --c-border: rgba(57,255,176,0.22);
+  --c-primary: #39ffb0;  --c-primary-soft: #21e89a; --c-primary-glow: rgba(57,255,176,0.55);
+  --c-accent: #b16cff;
+  --c-success: #39ffb0;  --c-warning: #ffe93b;  --c-danger: #ff4d6d;
+  --glass-rgb: 110, 255, 200;
+  --glass-bg: rgba(110,255,200,0.07);
+  --glass-bg-strong: rgba(110,255,200,0.13);
+  --bg-1: #0a1f17; --bg-2: #060608; --bg-3: #1a0a2e;
+}
+[data-theme="neon"] .app-bg::before {
+  background:
+    radial-gradient(45% 45% at 14% 16%, rgba(57,255,176,0.34), transparent 65%),
+    radial-gradient(45% 45% at 86% 84%, rgba(177,108,255,0.30), transparent 66%);
+  animation: aurora-drift 16s var(--ease-in-out) infinite;
+}
+
+/* ---------- 9. SPACE — cosmic starfield + nebula ---------- */
+[data-theme="space"] {
+  --c-bg: #03030a;       --c-bg-2: #070716;
+  --c-surface: rgba(16,16,38,0.72);   --c-surface-2: rgba(24,24,52,0.6);
+  --c-elevated: #0d0d24;
+  --c-text: #eef0ff;     --c-text-soft: #b3b7e0;   --c-text-mute: #767aa6;
+  --c-border: rgba(130,140,255,0.16);
+  --c-primary: #7b8cff;  --c-primary-soft: #5f6ff0; --c-primary-glow: rgba(123,140,255,0.5);
+  --c-accent: #ff8fd0;
+  --c-success: #5be7a9;  --c-warning: #ffcf5c;  --c-danger: #ff6b7d;
+  --glass-rgb: 150, 160, 255;
+  --glass-bg: rgba(150,160,255,0.06);
+  --glass-bg-strong: rgba(150,160,255,0.11);
+  --bg-1: #0a0a26; --bg-2: #03030a; --bg-3: #1a0a36;
+}
+[data-theme="space"] .app-bg::before {
+  background:
+    radial-gradient(45% 50% at 78% 22%, rgba(123,140,255,0.30), transparent 70%),
+    radial-gradient(40% 40% at 18% 80%, rgba(255,143,208,0.22), transparent 72%);
+  animation: aurora-drift 40s var(--ease-in-out) infinite;
+}
+[data-theme="space"] .app-bg::after {
+  background-image:
+    radial-gradient(1.5px 1.5px at 20% 30%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 70% 60%, #cfd4ff, transparent),
+    radial-gradient(1px 1px at 40% 80%, #fff, transparent),
+    radial-gradient(1px 1px at 85% 25%, #e0c0ff, transparent),
+    radial-gradient(2px 2px at 55% 15%, #fff, transparent),
+    radial-gradient(1px 1px at 10% 65%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 90% 80%, #bfe0ff, transparent);
+  background-size: 100% 100%;
+  opacity: 1;
+  animation: stars-twinkle 6s ease-in-out infinite;
+}
+
+/* ---------- 10. GLASS — frosted prism over soft light ---------- */
+[data-theme="glass"] {
+  --c-bg: #0e1018;       --c-bg-2: #141826;
+  --c-surface: rgba(255,255,255,0.10);   --c-surface-2: rgba(255,255,255,0.06);
+  --c-elevated: rgba(255,255,255,0.12);
+  --c-text: #f4f6ff;     --c-text-soft: #c4c9e0;   --c-text-mute: #888fb0;
+  --c-border: rgba(255,255,255,0.18);
+  --c-primary: #8fb8ff;  --c-primary-soft: #6ea0ff; --c-primary-glow: rgba(143,184,255,0.45);
+  --c-accent: #ff9ad5;
+  --c-success: #6ee7b0;  --c-warning: #ffd57a;  --c-danger: #ff8095;
+  --glass-rgb: 255, 255, 255;
+  --glass-bg: rgba(255,255,255,0.08);
+  --glass-bg-strong: rgba(255,255,255,0.14);
+  --glass-blur: 26px;
+  --bg-1: #20264a; --bg-2: #0e1018; --bg-3: #3a2050;
+}
+[data-theme="glass"] .app-bg::before {
+  background:
+    radial-gradient(50% 45% at 22% 18%, rgba(143,184,255,0.42), transparent 68%),
+    radial-gradient(48% 45% at 80% 30%, rgba(255,154,213,0.34), transparent 70%),
+    radial-gradient(55% 50% at 50% 96%, rgba(120,255,220,0.26), transparent 70%);
+  animation: aurora-drift 24s var(--ease-in-out) infinite;
+  filter: saturate(1.2);
+}
+
+/* ============================================================
+   Shared background scaffold + keyframes
+   ============================================================ */
+.app-bg {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-bg);
+  overflow: hidden;
+  background:
+    radial-gradient(120% 120% at 50% 0%, var(--bg-1) 0%, var(--bg-2) 55%, var(--bg-3) 120%);
+  transition: background var(--t-slow) var(--ease-out);
+}
+.app-bg::before,
+.app-bg::after {
+  content: "";
+  position: absolute;
+  inset: -25%;
+  pointer-events: none;
+}
+.app-bg::after { opacity: 0; }
+
+/* Subtle film grain over every theme for texture (very cheap) */
+.app-bg .grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+@keyframes aurora-drift {
+  0%   { transform: translate3d(-4%, -2%, 0) scale(1.05) rotate(0deg); }
+  33%  { transform: translate3d(3%, 2%, 0) scale(1.12) rotate(4deg); }
+  66%  { transform: translate3d(-2%, 4%, 0) scale(1.08) rotate(-3deg); }
+  100% { transform: translate3d(-4%, -2%, 0) scale(1.05) rotate(0deg); }
+}
+@keyframes ocean-sway {
+  0%   { transform: translate3d(-3%, 0, 0) scale(1.1); }
+  50%  { transform: translate3d(4%, 3%, 0) scale(1.16); }
+  100% { transform: translate3d(-3%, 0, 0) scale(1.1); }
+}
+@keyframes grid-pan {
+  0%   { background-position: 0 0; }
+  100% { background-position: 96px 96px; }
+}
+@keyframes stars-twinkle {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .app-bg::before,
+  .app-bg::after { animation: none !important; }
+}

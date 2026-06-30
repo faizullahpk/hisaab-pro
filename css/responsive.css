@@ -1,0 +1,78 @@
+/* ============================================================
+   Hisaab Pro — Responsive & Adaptive Layout
+   Desktop · Tablet · Android · iPhone · landscape · portrait
+   ============================================================ */
+
+/* Mobile top bar / drawer pieces hidden on desktop by default */
+.mobile-only { display: none; }
+.sidebar-scrim { display: none; }
+
+/* ---------- Tablet (≤ 1080px): collapse rail by default ---------- */
+@media (max-width: 1080px) {
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: repeat(2, 1fr); }
+  .auth-shell { grid-template-columns: 1fr; }
+  .auth-aside { display: none; }
+}
+
+/* ---------- Mobile (≤ 760px): off-canvas sidebar drawer ---------- */
+@media (max-width: 760px) {
+  .app-shell, .app-shell.is-collapsed { grid-template-columns: 1fr; }
+  .sidebar {
+    position: fixed; left: 0; top: 0; width: min(86vw, 320px);
+    transform: translateX(-105%);
+    transition: transform var(--t-base) var(--ease-out);
+    box-shadow: var(--shadow-lg);
+  }
+  .app-shell.drawer-open .sidebar { transform: translateX(0); }
+  .sidebar-scrim { display: block; position: fixed; inset: 0; z-index: calc(var(--z-sidebar) - 1); background: rgba(0,0,0,0.5); opacity: 0; pointer-events: none; transition: opacity var(--t-base); }
+  .app-shell.drawer-open .sidebar-scrim { opacity: 1; pointer-events: auto; }
+
+  .mobile-only { display: grid; }
+  .topbar { padding: 0 var(--s-4); gap: var(--s-2); }
+  .topbar-title { font-size: var(--fs-md); }
+  .searchbar { display: none; }
+  .topbar .searchbar-mobile { display: grid; }
+
+  .app-content { padding: var(--s-5) var(--s-4) var(--s-16); }
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .span-2 { grid-column: span 1; }
+  .page-head h1 { font-size: var(--fs-2xl); }
+  .auth-panel { padding: var(--s-5); }
+  .auth-card .auth-head h2 { font-size: var(--fs-2xl); }
+  .toast-stack { left: var(--s-4); right: var(--s-4); bottom: var(--s-4); max-width: none; }
+
+  /* Optional bottom tab bar for phones */
+  .bottom-nav { display: flex; }
+}
+
+/* Bottom nav (phone) — hidden elsewhere */
+.bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; height: 64px; z-index: var(--z-sticky); padding: 0 var(--s-2); background: rgba(var(--glass-rgb),0.06); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); border-top: 1px solid var(--c-border); align-items: center; justify-content: space-around; }
+.bottom-nav a { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 0.62rem; color: var(--c-text-mute); padding: var(--s-2); border-radius: var(--r-sm); }
+.bottom-nav a .icon { width: 22px; height: 22px; }
+.bottom-nav a.is-active { color: var(--c-primary); }
+
+/* ---------- Small phones (≤ 380px) ---------- */
+@media (max-width: 380px) {
+  .app-content { padding: var(--s-4) var(--s-3) var(--s-16); }
+  .card { padding: var(--s-5); }
+}
+
+/* ---------- Landscape phones: tighten vertical rhythm ---------- */
+@media (max-height: 480px) and (orientation: landscape) {
+  .topbar { height: 56px; }
+  .auth-card { max-width: 480px; }
+  .auth-card .auth-head { margin-bottom: var(--s-5); }
+}
+
+/* ---------- Large desktops: breathe ---------- */
+@media (min-width: 1600px) {
+  .app-content { padding: var(--s-10) var(--s-8) var(--s-16); }
+}
+
+/* ---------- PWA safe-area insets (iPhone notch) ---------- */
+@supports (padding: env(safe-area-inset-top)) {
+  .topbar { padding-top: env(safe-area-inset-top); height: calc(var(--topbar-h) + env(safe-area-inset-top)); }
+  .bottom-nav { padding-bottom: env(safe-area-inset-bottom); height: calc(64px + env(safe-area-inset-bottom)); }
+  .sidebar { padding-top: calc(var(--s-5) + env(safe-area-inset-top)); }
+}

@@ -1,0 +1,126 @@
+/* ============================================================
+   Hisaab Pro — Design Tokens
+   The single primitive layer. Themes override only the
+   semantic --c-* palette; everything else stays constant.
+   ============================================================ */
+
+/*
+ * CRITICAL FALLBACK COLOURS — applied before any theme CSS parses.
+ * These mirror the midnight theme so the page is never white-on-white.
+ * [data-theme] rules in themes.css override all of these immediately.
+ */
+:root {
+  --c-bg: #0a0a14;
+  --c-bg-2: #0e0b1d;
+  --c-surface: rgba(22,20,42,0.72);
+  --c-surface-2: rgba(30,27,54,0.62);
+  --c-elevated: #15132a;
+  --c-text: #f3f1ff;
+  --c-text-soft: #b9b4d6;
+  --c-text-mute: #7d7799;
+  --c-border: rgba(146,131,255,0.14);
+  --c-primary: #8b7cff;
+  --c-primary-soft: #6c5ce7;
+  --c-primary-glow: rgba(123,108,255,0.45);
+  --c-accent: #ff7ac6;
+  --c-success: #5be7a9;
+  --c-warning: #ffcf5c;
+  --c-danger: #ff6b7d;
+  --glass-rgb: 180, 168, 255;
+  --glass-bg: rgba(180,168,255,0.06);
+  --glass-bg-strong: rgba(180,168,255,0.11);
+  --bg-1: #1a1340;
+  --bg-2: #0a0a14;
+  --bg-3: #2a1654;
+}
+:root {
+  /* — Type families — */
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
+
+  /* — Type scale (1.250 major third) — */
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.125rem;
+  --fs-xl: 1.375rem;
+  --fs-2xl: 1.75rem;
+  --fs-3xl: 2.25rem;
+  --fs-4xl: 3rem;
+  --fs-5xl: 3.75rem;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  --lh-tight: 1.1;
+  --lh-snug: 1.3;
+  --lh-normal: 1.55;
+
+  --ls-tight: -0.02em;
+  --ls-wide: 0.04em;
+  --ls-caps: 0.12em;
+
+  /* — Spacing scale (4px base) — */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.25rem;
+  --s-6: 1.5rem;
+  --s-8: 2rem;
+  --s-10: 2.5rem;
+  --s-12: 3rem;
+  --s-16: 4rem;
+  --s-20: 5rem;
+  --s-24: 6rem;
+
+  /* — Radii — */
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+  --r-2xl: 36px;
+  --r-full: 999px;
+
+  /* — Motion — */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --t-fast: 140ms;
+  --t-base: 240ms;
+  --t-slow: 440ms;
+
+  /* — Layout metrics — */
+  --sidebar-w: 264px;
+  --sidebar-w-collapsed: 76px;
+  --topbar-h: 68px;
+  --content-max: 1480px;
+
+  /* — Z-index ladder — */
+  --z-bg: 0;
+  --z-base: 1;
+  --z-sticky: 100;
+  --z-sidebar: 200;
+  --z-topbar: 250;
+  --z-dropdown: 400;
+  --z-modal: 600;
+  --z-toast: 800;
+  --z-loader: 1000;
+
+  /* — Glass system (theme-tinted via --glass-rgb) — */
+  --glass-blur: 18px;
+  --glass-rgb: 255, 255, 255;
+  --glass-bg: rgba(var(--glass-rgb), 0.06);
+  --glass-bg-strong: rgba(var(--glass-rgb), 0.1);
+  --glass-border: rgba(var(--glass-rgb), 0.12);
+
+  /* — Elevation — */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.18), 0 1px 1px rgba(0,0,0,0.12);
+  --shadow-md: 0 8px 24px -8px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.2);
+  --shadow-lg: 0 24px 60px -16px rgba(0,0,0,0.5), 0 8px 20px -12px rgba(0,0,0,0.35);
+  --shadow-glow: 0 0 0 1px rgba(var(--glass-rgb),0.06), 0 12px 40px -12px var(--c-primary-glow);
+}

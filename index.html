@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="midnight">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0" />
+  <title>Hisaab Pro — Your Personal Financial Operating System</title>
+  <meta name="description" content="Hisaab Pro — a private, premium financial operating system. Track income, expenses, clients, debts and savings in one beautiful, installable app." />
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a14" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Hisaab Pro" />
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png" />
+  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg" />
+
+  <!-- CRITICAL: inline colours so the page is dark BEFORE any external CSS loads.
+       Without this, a slow network shows white-on-white while stylesheets fetch. -->
+  <style>
+    html, body { background: #0a0a14 !important; color: #f3f1ff !important; margin: 0; }
+    html[data-theme="light"], html[data-theme="minimal"] { background: #f6f7fb !important; color: #18181b !important; }
+    #app { min-height: 100vh; }
+    .boot-splash { background: #0a0a14; }
+  </style>
+
+  <!-- Fonts: display / UI / mono-for-figures -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Styles (cascade order matters) -->
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/themes.css" />
+  <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
+  <link rel="stylesheet" href="css/ui.css" />
+  <link rel="stylesheet" href="css/modules.css" />
+
+  <!-- GSAP (optional, enhances motion; app degrades to CSS if blocked) -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <!-- Chart.js — Reports module -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+
+  <!-- Local environment (Cloudinary live; add Firebase keys here). Classic
+       script so window.__HISAAB_ENV__ exists before the module runs. -->
+  <script src="config/env.js"></script>
+
+  <!-- CRITICAL: set saved theme BEFORE first paint — modules are deferred so
+       without this the [data-theme] attr is missing during CSS parse, causing
+       all --c-* vars to be undefined → invisible white text. -->
+  <script>
+    (function(){
+      var VALID = ["midnight","dark","space","ocean","forest","cyberpunk","neon","glass","light","minimal"];
+      var t = "midnight";
+      try {
+        // LocalStore wraps values in JSON.stringify, so stored as '"midnight"' (with quotes)
+        var raw = localStorage.getItem("hisaab:theme");
+        if (raw) { var parsed = JSON.parse(raw); if (VALID.indexOf(parsed) > -1) t = parsed; }
+      } catch(e) {}
+      document.documentElement.setAttribute("data-theme", t);
+      document.documentElement.style.colorScheme = (t === "light" || t === "minimal") ? "light" : "dark";
+    })();
+  </script>
+</head>
+<body>
+  <!-- The entire UI is rendered into this root by the app shell -->
+  <div id="app"></div>
+
+  <noscript>
+    <div style="max-width:520px;margin:18vh auto;text-align:center;font-family:system-ui;color:#e8e8f0">
+      <h1>Hisaab Pro needs JavaScript</h1>
+      <p>Please enable JavaScript to use your financial workspace.</p>
+    </div>
+  </noscript>
+
+  <!-- Single module entry point — boots theme, auth, router, PWA -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

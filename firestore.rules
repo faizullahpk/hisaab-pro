@@ -1,0 +1,84 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthed()       { return request.auth != null; }
+    function isOwner(uid)     { return isAuthed() && request.auth.uid == uid; }
+    function isValidAmount()  { return request.resource.data.get('amount', 0) is number && request.resource.data.amount >= 0; }
+
+    // ── Users ───────────────────────────────────────────────────────────────
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
+
+      match /sessions/{doc}      { allow read, write: if isOwner(uid); }
+      match /devices/{doc}       { allow read, write: if isOwner(uid); }
+      match /login_history/{doc} { allow read, write: if isOwner(uid); }
+      match /preferences/{doc}   { allow read, write: if isOwner(uid); }
+
+      // ── Transactions (Phase 4) ─────────────────────────────────────────
+      match /transactions/{txnId} {
+        allow read, list: if isOwner(uid);
+        allow create: if isOwner(uid) && isValidAmount()
+          && request.resource.data.type in ['income', 'expense'];
+        allow update: if isOwner(uid) && isValidAmount();
+        allow delete: if isOwner(uid);
+      }
+
+      // ── Clients (Phase 5) ──────────────────────────────────────────────
+      match /clients/{clientId} {
+        allow read, list: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0;
+        allow delete: if isOwner(uid);
+
+        match /payments/{paymentId} {
+          allow read, list: if isOwner(uid);
+          allow create: if isOwner(uid) && isValidAmount()
+            && request.resource.data.status in ['pending', 'paid'];
+          allow update: if isOwner(uid);
+          allow delete: if isOwner(uid);
+        }
+      }
+
+      // ── Debts (Phase 5) ────────────────────────────────────────────────
+      match /debts/{debtId} {
+        allow read, list: if isOwner(uid);
+        allow create: if isOwner(uid) && isValidAmount()
+          && request.resource.data.type in ['borrowed', 'lent'];
+        allow update: if isOwner(uid);
+        allow delete: if isOwner(uid);
+      }
+
+      // ── Family (Phase 6) ───────────────────────────────────────────────
+      match /family/{memberId} {
+        allow read, list: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && request.resource.data.name is string;
+        allow delete: if isOwner(uid);
+
+        match /family_expenses/{expId} {
+          allow read, list: if isOwner(uid);
+          allow create: if isOwner(uid) && isValidAmount();
+          allow delete: if isOwner(uid);
+        }
+      }
+
+      // ── Savings (Phase 6) ──────────────────────────────────────────────
+      match /savings/{goalId} {
+        allow read, list: if isOwner(uid);
+        allow create: if isOwner(uid)
+          && request.resource.data.name is string
+          && request.resource.data.targetAmount >= 0;
+        allow update: if isOwner(uid);
+        allow delete: if isOwner(uid);
+      }
+
+      // ── Receipts (future) ──────────────────────────────────────────────
+      match /receipts/{receiptId} {
+        allow read, list: if isOwner(uid);
+        allow create, delete: if isOwner(uid);
+      }
+    }
+  }
+}
